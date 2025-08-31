@@ -4,7 +4,95 @@
 <head>
     <meta charset="UTF-8">
     <title>C Todo App</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef2f5;
+            display: flex;
+            justify-content: center;
+            padding: 50px;
+        }
+
+        .container {
+            background: white;
+            padding: 25px 40px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+            width: 420px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        ul {
+            margin-top: 20px;
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .actions button {
+            padding: 5px 8px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background: orange;
+        }
+
+        .edit-btn:hover {
+            background: darkorange;
+        }
+
+        .delete-btn {
+            background: red;
+        }
+
+        .delete-btn:hover {
+            background: darkred;
+        }
+    </style>
 </head>
 
 <body>
@@ -25,15 +113,39 @@
             list.innerHTML = '';
             todos.forEach(todo => {
                 const li = document.createElement('li');
-                li.textContent = todo.text;
-                li.className = "todo-item";
+
+                const textSpan = document.createElement('span');
+                textSpan.textContent = todo.text;
+
+                const actions = document.createElement('div');
+                actions.className = "actions";
+
+                const edit = document.createElement('button');
+                edit.textContent = "✏️";
+                edit.className = "edit-btn";
+                edit.onclick = async () => {
+                    const newText = prompt("Edit todo:", todo.text);
+                    if (newText) {
+                        await fetch(`/api/todos/${todo.id}`, {
+                            method: "PUT",
+                            body: newText
+                        });
+                        fetchTodos();
+                    }
+                };
+
                 const del = document.createElement('button');
                 del.textContent = "❌";
+                del.className = "delete-btn";
                 del.onclick = async () => {
                     await fetch(`/api/todos/${todo.id}`, { method: "DELETE" });
                     fetchTodos();
                 };
-                li.appendChild(del);
+
+                actions.appendChild(edit);
+                actions.appendChild(del);
+                li.appendChild(textSpan);
+                li.appendChild(actions);
                 list.appendChild(li);
             });
         }

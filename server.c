@@ -111,39 +111,23 @@ void handle_request(SOCKET client, const char *req)
             send_response(client, "text/plain", "");
         }
     }
-    // ---- Static files ----
+    // ---- Static file: index.html only ----
     else
     {
-        char file_path[1024];
-        if (strcmp(path, "/") == 0)
-            strcpy(file_path, "index.html");
-        else
-            strcpy(file_path, path + 1); // remove leading '/'
-
-        FILE *file = fopen(file_path, "rb");
+        FILE *file = fopen("index.html", "rb");
         if (!file)
         {
             send_response(client, "text/plain", "404 Not Found");
             return;
         }
-
         fseek(file, 0, SEEK_END);
         long fsize = ftell(file);
         rewind(file);
-
         char *content = malloc(fsize + 1);
         fread(content, 1, fsize, file);
         content[fsize] = 0;
         fclose(file);
-
-        // Detect content type
-        const char *ctype = "text/plain";
-        if (strstr(file_path, ".html"))
-            ctype = "text/html";
-        else if (strstr(file_path, ".css"))
-            ctype = "text/css";
-
-        send_response(client, ctype, content);
+        send_response(client, "text/html", content);
         free(content);
     }
 }
@@ -191,7 +175,6 @@ int main()
         client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (client_fd == INVALID_SOCKET)
             continue;
-
         int valread = recv(client_fd, buffer, sizeof(buffer), 0);
         if (valread > 0)
         {
