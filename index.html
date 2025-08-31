@@ -3,49 +3,62 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>C Todo App</title>
+    <title>Todo App (C Backend)</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #eef2f5;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            padding: 50px;
+            align-items: flex-start;
+            padding: 40px 20px;
         }
 
         .container {
-            background: white;
-            padding: 25px 40px;
-            border-radius: 12px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-            width: 420px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             color: #333;
         }
 
         form {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
 
         input {
             flex: 1;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
             border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
         }
 
         button {
-            background: #007bff;
-            color: white;
+            padding: 12px 18px;
             border: none;
             border-radius: 8px;
-            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            font-size: 16px;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         button:hover {
@@ -53,44 +66,62 @@
         }
 
         ul {
-            margin-top: 20px;
             list-style: none;
-            padding: 0;
+            margin-top: 10px;
         }
 
         li {
-            padding: 10px;
-            background: #f9f9f9;
-            margin-bottom: 10px;
-            border-radius: 6px;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            transition: transform 0.2s;
+        }
+
+        li:hover {
+            transform: scale(1.02);
+        }
+
+        .todo-text {
+            flex: 1;
+            margin-right: 10px;
         }
 
         .actions button {
-            padding: 5px 8px;
-            border: none;
+            margin-left: 6px;
+            padding: 6px 10px;
+            font-size: 14px;
             border-radius: 6px;
-            color: white;
-            cursor: pointer;
         }
 
         .edit-btn {
-            background: orange;
+            background: #ffc107;
         }
 
         .edit-btn:hover {
-            background: darkorange;
+            background: #e0a800;
         }
 
         .delete-btn {
-            background: red;
+            background: #dc3545;
         }
 
         .delete-btn:hover {
-            background: darkred;
+            background: #a71d2a;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            input,
+            button {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -99,7 +130,7 @@
     <div class="container">
         <h1>Todo App (C Backend)</h1>
         <form id="todoForm">
-            <input type="text" id="todoInput" placeholder="Enter new todo..." required>
+            <input type="text" id="todoInput" placeholder="Enter a new todo..." required>
             <button type="submit">Add</button>
         </form>
         <ul id="todoList"></ul>
@@ -114,37 +145,37 @@
             todos.forEach(todo => {
                 const li = document.createElement('li');
 
-                const textSpan = document.createElement('span');
-                textSpan.textContent = todo.text;
+                const span = document.createElement('span');
+                span.className = 'todo-text';
+                span.textContent = todo.text;
 
                 const actions = document.createElement('div');
-                actions.className = "actions";
+                actions.className = 'actions';
 
-                const edit = document.createElement('button');
-                edit.textContent = "✏️";
-                edit.className = "edit-btn";
-                edit.onclick = async () => {
+                // Edit button
+                const editBtn = document.createElement('button');
+                editBtn.textContent = '✏️';
+                editBtn.className = 'edit-btn';
+                editBtn.onclick = async () => {
                     const newText = prompt("Edit todo:", todo.text);
                     if (newText) {
-                        await fetch(`/api/todos/${todo.id}`, {
-                            method: "PUT",
-                            body: newText
-                        });
+                        await fetch(`/api/todos/${todo.id}`, { method: "PUT", body: newText });
                         fetchTodos();
                     }
                 };
 
-                const del = document.createElement('button');
-                del.textContent = "❌";
-                del.className = "delete-btn";
-                del.onclick = async () => {
+                // Delete button
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '🗑️';
+                delBtn.className = 'delete-btn';
+                delBtn.onclick = async () => {
                     await fetch(`/api/todos/${todo.id}`, { method: "DELETE" });
                     fetchTodos();
                 };
 
-                actions.appendChild(edit);
-                actions.appendChild(del);
-                li.appendChild(textSpan);
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+                li.appendChild(span);
                 li.appendChild(actions);
                 list.appendChild(li);
             });
@@ -153,10 +184,7 @@
         document.getElementById('todoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const input = document.getElementById('todoInput');
-            await fetch('/api/todos', {
-                method: 'POST',
-                body: input.value
-            });
+            await fetch('/api/todos', { method: 'POST', body: input.value });
             input.value = '';
             fetchTodos();
         });
