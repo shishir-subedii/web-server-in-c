@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>C Todo App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Todo App (C Backend)</h1>
+        <form id="todoForm">
+            <input type="text" id="todoInput" placeholder="Enter new todo..." required>
+            <button type="submit">Add</button>
+        </form>
+        <ul id="todoList"></ul>
+    </div>
+
+    <script>
+        async function fetchTodos() {
+            const res = await fetch('/api/todos');
+            const todos = await res.json();
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.textContent = todo.text;
+                li.className = "todo-item";
+                const del = document.createElement('button');
+                del.textContent = "❌";
+                del.onclick = async () => {
+                    await fetch(`/api/todos/${todo.id}`, { method: "DELETE" });
+                    fetchTodos();
+                };
+                li.appendChild(del);
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('todoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('todoInput');
+            await fetch('/api/todos', {
+                method: 'POST',
+                body: input.value
+            });
+            input.value = '';
+            fetchTodos();
+        });
+
+        fetchTodos();
+    </script>
+</body>
+
+</html>
