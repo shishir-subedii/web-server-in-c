@@ -19,7 +19,6 @@ Todo todos[MAX_TODOS];
 int todo_count = 0;
 int next_id = 1;
 
-// Helper: send HTTP response
 void send_response(SOCKET client, const char *content_type, const char *body)
 {
     char header[512];
@@ -35,13 +34,11 @@ void send_response(SOCKET client, const char *content_type, const char *body)
     send(client, body, (int)strlen(body), 0);
 }
 
-// Handle API and static files
 void handle_request(SOCKET client, const char *req)
 {
     char method[8], path[1024];
     sscanf(req, "%s %s", method, path);
 
-    // ---- API: /api/todos ----
     if (strncmp(path, "/api/todos", 10) == 0)
     {
         if (strcmp(method, "GET") == 0)
@@ -111,23 +108,35 @@ void handle_request(SOCKET client, const char *req)
             send_response(client, "text/plain", "");
         }
     }
-    // ---- Static file: index.html only ----
     else
     {
-        FILE *file = fopen("index.html", "rb");
+        char file_path[1024];
+        if (strcmp(path, "/") == 0)
+            strcpy(file_path, "index.html");
+        else
+            strcpy(file_path, path + 1);
+
+        FILE *file = fopen(file_path, "rb");
         if (!file)
         {
             send_response(client, "text/plain", "404 Not Found");
             return;
         }
+
         fseek(file, 0, SEEK_END);
         long fsize = ftell(file);
         rewind(file);
+
         char *content = malloc(fsize + 1);
         fread(content, 1, fsize, file);
         content[fsize] = 0;
         fclose(file);
-        send_response(client, "text/html", content);
+
+        const char *ctype = "text/plain";
+        if (strstr(file_path, ".html"))
+            ctype = "text/html";
+
+        send_response(client, ctype, content);
         free(content);
     }
 }
@@ -140,7 +149,6 @@ int main()
     int addrlen = sizeof(address);
     char buffer[30000];
 
-    // Init Winsock
     if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
     {
         printf("WSAStartup failed: %d\n", WSAGetLastError());
@@ -175,6 +183,7 @@ int main()
         client_fd = accept(server_fd, (struct sockaddr *)&address, &addrlen);
         if (client_fd == INVALID_SOCKET)
             continue;
+
         int valread = recv(client_fd, buffer, sizeof(buffer), 0);
         if (valread > 0)
         {
