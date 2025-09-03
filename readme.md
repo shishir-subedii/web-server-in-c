@@ -1,4 +1,4 @@
-# basic web server in c(basic crud todo) for windows
+# basic web server in c(basic crud todo) for windows (no db included)
 
 ## How to run: 
 
